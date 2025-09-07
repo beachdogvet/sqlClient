@@ -79,6 +79,7 @@ export default App;
 - Start node server:
     > node index.js
 - Start React client app
-    > npm run dev
+    > npm run dev  
+    
     > open the link in browser
         > - http://localhost:5173/
