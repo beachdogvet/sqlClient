@@ -1,12 +1,84 @@
-# React + Vite
+- This project was designed with the intent of connecting and querying a MSSQL database.  
+- It uses other project I created mssqlServer to connect to and query a MSSQL database.  
+- I used  vite to create the project
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+#### Step 1: Update the Node.js project
+- open mssqlServer node.js project in vscode
+- run: npm install express cors
+- update index.js
+```
+const express = require('express');
+const cors = require('cors');
+const sql = require('mssql');
+const config = require('./dbConfig');
 
-Currently, two official plugins are available:
+const app = express();
+const PORT = 5000;
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+app.use(cors());
 
-## Expanding the ESLint configuration
+app.get('/api/data', async (req, res) => {
+  try {
+    await sql.connect(config);
+    const result = await sql.query('SELECT * FROM your_table_name');
+    res.json(result.recordset);
+  } catch (err) {
+    console.error('SQL error', err);
+    res.status(500).send('Server error');
+  } finally {
+    await sql.close();
+  }
+});
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
+```
+
+#### Step 2: Create the client React project
+
+- Start vscode
+- Open a terminal session
+- cd to project folder location and create a folder
+- run: npx create-vite
+    > - npm install
+
+#### Step 3: Use Component to call node.js server
+- Assuming your going to use App.jsx
+- Enter the following code
+```
+import React, { useEffect, useState } from 'react';
+
+function App() {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/data')
+      .then(res => res.json())
+      .then(setData)
+      .catch(err => console.error('Fetch error:', err));
+  }, []);
+
+  return (
+    <div>
+      <h1>SQL Server Data</h1>
+      <ul>
+        {data.map((row, index) => (
+          <li key={index}>{JSON.stringify(row)}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default App;
+
+```
+
+#### Test
+- Start node server:
+    > node index.js
+- Start React client app
+    > npm run dev
+    > open the link in browser
+        >- http://localhost:5173/
